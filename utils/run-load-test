@@ -1,0 +1,92 @@
+#!/bin/bash
+
+set -e
+
+ROOT_PATH="../"
+RESOURCE_NOT_FOUND="not found"
+
+RED=$(tput setaf 1)
+GREEN=$(tput setaf 2)
+YELLOW=$(tput setaf 3)
+DEFAULT=$(tput sgr0)
+
+
+error_message() {
+    printf "\n${RED} ERROR: ${DEFAULT}%s \n\n" "$1"
+}
+
+warning_message() {
+    printf "\n${YELLOW} WARNING: ${DEFAULT}%s \n\n" "$1"
+}
+
+info_message() {
+    printf "\n${GREEN} INFO: ${DEFAULT}%s \n\n" "$1"
+}
+
+validate_setup_is_running() {
+    influxdb=$(docker container ls | grep 'influxdb' || echo "$RESOURCE_NOT_FOUND")
+    grafana=$(docker container ls | grep 'grafana' || echo "$RESOURCE_NOT_FOUND")
+
+    if [[ "$influxdb" == "$RESOURCE_NOT_FOUND" || "$grafana" == "$RESOURCE_NOT_FOUND" ]]; then
+        error_message "InfluxDB and Grafana containers are down, consider run the './setup up' to up environment."
+        exit 1
+    fi
+}
+
+validate_resource_installation_type_not_supported() {
+    resource_exists=$(snap list | awk '{ print $1 }' | grep "$1" || echo "$RESOURCE_NOT_FOUND")
+
+    if [[ "$resource_exists" != "$RESOURCE_NOT_FOUND" ]]; then
+        warning_message "'$1' installation type doesn't support, consider installing the '$1' using a package manager"
+        exit 1
+    fi
+}
+
+validate_mandatory_resource() {
+    resource_exists=$(which "$1" || echo "$RESOURCE_NOT_FOUND")
+
+    if [[ "$resource_exists" == "$RESOURCE_NOT_FOUND" ]]; then
+        warning_message "'$1' not found, this is mandatory."
+        exit 1
+    fi
+}
+
+startup_validation() {
+    resources_required=("docker" "docker-compose")
+
+    for resource in "${resources_required[@]}"; do
+        validate_mandatory_resource "$resource" && \
+        validate_resource_installation_type_not_supported "$resource"
+    done
+
+    validate_setup_is_running
+}
+
+main() {
+    docker-compose run k6 run "/scripts/$1" && \
+    info_message "Successful load test execution."
+}
+
+startup_validation
+
+if [ -z "$1" ]; then
+    while [ -z "$scenario" ]
+    do
+        read -rp "Inform a scenario name: " scenario
+    done
+else
+    scenario="$1"
+fi
+
+pushd "$ROOT_PATH"
+
+valid_scenario=$(find scripts/ -name "${scenario}.js" | awk -F/ '{print $2}')
+
+if [ -z "$valid_scenario" ]; then
+    error_message "The scenario not found."
+    exit 1
+fi
+
+main "$valid_scenario"
+
+popd

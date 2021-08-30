@@ -1,0 +1,91 @@
+#!/bin/bash
+
+set -e
+
+ROOT_PATH="../"
+RESOURCE_NOT_FOUND="not found"
+
+RED=$(tput setaf 1)
+GREEN=$(tput setaf 2)
+YELLOW=$(tput setaf 3)
+DEFAULT=$(tput sgr0)
+
+
+error_message() {
+    printf "\n${RED} ERROR: ${DEFAULT}%s \n\n" "$1"
+}
+
+warning_message() {
+    printf "\n${YELLOW} WARNING: ${DEFAULT}%s \n\n" "$1"
+}
+
+info_message() {
+    printf "\n${GREEN} INFO: ${DEFAULT}%s \n\n" "$1"
+}
+
+validate_resource_installation_type_not_supported() {
+    resource_exists=$(snap list | awk '{ print $1 }' | grep "$1" || echo "$RESOURCE_NOT_FOUND")
+
+    if [[ "$resource_exists" != "$RESOURCE_NOT_FOUND" ]]; then
+        warning_message "'$1' installation type doesn't support, consider installing the '$1' using a package manager"
+        exit 1
+    fi
+}
+
+validate_mandatory_resource() {
+    resource_exists=$(which "$1" || echo "$RESOURCE_NOT_FOUND")
+
+    if [[ "$resource_exists" == "$RESOURCE_NOT_FOUND" ]]; then
+        warning_message "'$1' not found, this is mandatory."
+        exit 1
+    fi
+}
+
+startup_validation() {
+    resources_required=("docker" "docker-compose")
+
+    for resource in "${resources_required[@]}"; do
+        validate_mandatory_resource "$resource" && \
+        validate_resource_installation_type_not_supported "$resource"
+    done
+}
+
+up() {
+    pushd "$ROOT_PATH" && \
+    docker-compose up -d influxdb grafana && \
+    popd && \
+    info_message "Load testing with Grafana dashboard: http://localhost:3000/d/k6/k6-load-testing-results"
+}
+
+down() {
+    pushd "$ROOT_PATH" && \
+    docker-compose down --remove-orphans --volume && \
+    popd && \
+    info_message "Down successfully"
+}
+
+startup_validation
+
+if [ -z "$1" ]; then
+    while [ -z "$parameter" ]
+    do
+        read -rp "Inform a parameter: (up/down) -> " parameter
+    done
+else
+    parameter="$1"
+fi
+
+case "$parameter" in
+    up)
+    up
+    ;;
+
+    down)
+    down
+    ;;
+
+    *)
+    error_message "The parameter does not valid."
+    exit 1
+    ;;
+esac
