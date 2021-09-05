@@ -42,10 +42,13 @@ export default function () {
 
 Para simplificar a criação do ambiente e execução dos cenários de teste, foram criandos dois scripts shell, sendo o `setup` responsável por prover o ambiente com o `influxdb` e `grafana`, e o `run-load-test` por executar os cenários baseado no nome do mesmo.
 
+> :warning: Os scripts shell devem ser executados à partir da pasta `/utils`, sendo necessário acessá-la antes de realizar a execução, o uso de qualquer outra forma pode apresentar problemas de execução pela forma como os scripts foram construídos.
+
 #### Configurando o ambiente:
 _O parâmetro `up` faz com que os containeres sejam inicializados, e o parâmetro `down` faz com que os mesmos sejam finalizados._ 
 
 ```sh
+~$ cd utils
 ~$ ./setup up
 ~$ ./setup down
 ```
@@ -54,6 +57,7 @@ _O parâmetro `up` faz com que os containeres sejam inicializados, e o parâmetr
 _O parâmetro de entrada é o nome de um arquivo de cenário de teste._
 
 ```sh
+~$ cd utils
 ~$ ./run-load-test get-token
 ~$ ./run-load-test health-check
 ```
