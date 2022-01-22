@@ -40,7 +40,7 @@ export default function () {
 
 > :warning: O arquivo `env.js` é de uso exclusivo para variáveis de ambiente compartilhadas entre os diversos cenários.
 
-Para simplificar a criação do ambiente e execução dos cenários de teste, foram criandos dois scripts shell, sendo o `setup` responsável por prover o ambiente com o `influxdb` e `grafana`, e o `run-load-test` por executar os cenários baseado no nome do mesmo.
+Para simplificar a criação do ambiente e execução dos cenários de teste, foram criados dois scripts shell, sendo o `setup` responsável por prover o ambiente com o `influxdb` e `grafana`, e o `run-load-test` por executar os cenários baseado no nome do mesmo.
 
 > :warning: Os scripts shell devem ser executados à partir da pasta `/utils`, sendo necessário acessá-la antes de realizar a execução, o uso de qualquer outra forma pode apresentar problemas de execução pela forma como os scripts foram construídos.
 
