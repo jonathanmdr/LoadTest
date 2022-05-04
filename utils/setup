@@ -24,11 +24,15 @@ info_message() {
 }
 
 validate_resource_installation_type_not_supported() {
-    resource_exists=$(snap list | awk '{ print $1 }' | grep "$1" || echo "$RESOURCE_NOT_FOUND")
+    os_system=$(uname -s)
 
-    if [[ "$resource_exists" != "$RESOURCE_NOT_FOUND" ]]; then
-        warning_message "'$1' installation type doesn't support, consider installing the '$1' using a package manager"
-        exit 1
+    if [[ "$os_system" == "Linux" ]]; then
+        resource_exists=$(snap list | awk '{ print $1 }' | grep "$1" || echo "$RESOURCE_NOT_FOUND")
+
+        if [[ "$resource_exists" != "$RESOURCE_NOT_FOUND" ]]; then
+            warning_message "'$1' installation type doesn't support, consider installing the '$1' using a package manager"
+            exit 1
+        fi
     fi
 }
 
@@ -59,7 +63,7 @@ up() {
 
 down() {
     pushd "$ROOT_PATH" && \
-    docker-compose down --remove-orphans --volume && \
+    docker-compose down --remove-orphans --volumes && \
     popd && \
     info_message "Down successfully"
 }

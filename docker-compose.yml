@@ -1,10 +1,4 @@
-version: "3.4"
-
-networks:
-  k6:
-    driver: bridge
-  grafana:
-    driver: bridge
+version: "3.8"
 
 services:
   influxdb:
@@ -51,3 +45,9 @@ services:
       - K6_OUT=influxdb=http://influxdb:8086/k6
     volumes:
       - ./scripts:/scripts
+
+networks:
+  k6:
+    driver: bridge
+  grafana:
+    driver: bridge
